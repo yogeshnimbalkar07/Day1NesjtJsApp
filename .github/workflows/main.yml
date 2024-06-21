@@ -31,3 +31,6 @@ jobs:
 
     - name: Build application
       run: npm run build
+
+    - name: Run application
+      run: npm start start:dev
