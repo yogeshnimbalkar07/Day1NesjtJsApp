@@ -1,27 +1,67 @@
-name: Deploy to EC2
+Deploy the NestJS HelloWorld sample application on EC2 manually.
+Implement CI/CD using GitHub Actions.
+
+
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup SSH
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 13.126.85.5 >> ~/.ssh/known_hosts
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '16.x'
 
-    - name: Deploy to EC2
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run lint
+      run: npm run lint
+
+    - name: Build application
+      run: npm run build
+
+      
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '16.x'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build application
+      run: npm run build
+
+    - name: Deploy to AWS EC2
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ap-south-1
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@13.126.85.5 "bash -s" < ./deploy-script.sh
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        npm install
+        npm start start:dev
