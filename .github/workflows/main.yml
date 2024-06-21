@@ -22,12 +22,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '16.x'
-        
-    - name: Install dependencie
-      run: curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-      
-    - name: Install dependencie
-      run: sudo apt-get install -y nodejs
 
     - name: Install dependencies
       run: npm install
@@ -37,6 +31,3 @@ jobs:
 
     - name: Build application
       run: npm run build
-
-    - name: Build application
-      run: npm start start:dev
