@@ -1,64 +1,27 @@
-
-# .github/workflows/ci-cd.yml
-name: CI/CD Pipeline
+name: Deploy to EC2
 
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '16.x'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run lint
-      run: npm run lint
-
-    - name: Build application
-      run: npm run build
-
-      
   deploy:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '16.x'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build application
-      run: npm run build
-
-    - name: Deploy to AWS EC2
+    - name: Setup SSH
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ap-south-1
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
-        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-        sudo apt-get install -y nodejs
-        npm install
-        npm start start:dev
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 13.126.85.5 >> ~/.ssh/known_hosts
+
+    - name: Deploy to EC2
+      run: |
+        ssh -i ~/.ssh/id_rsa ubuntu@13.126.85.5 "bash -s" < ./deploy-script.sh
