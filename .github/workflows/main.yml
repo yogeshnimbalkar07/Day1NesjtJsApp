@@ -58,6 +58,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       run: |
-        # Use SSH to deploy the build to the EC2 instance
-        scp -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY_PATH }} -r ./dist/* ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/var/www/nestjs-app
-        ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY_PATH }} ubuntu@${{ secrets.EC2_PUBLIC_IP }} "sudo systemctl restart nestjs-app"
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        npm install
+        npm start start:dev
